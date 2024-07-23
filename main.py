@@ -10,6 +10,8 @@ spark = SparkSession.builder.appName("SparkApp").getOrCreate()
 # Read data from CSV file
 df = spark.read.csv("hdfs://localhost:9000/cleaned.csv", header=True)
 
+df.printSchema()
+
 
 # Function to generate gradient colors
 def generate_gradient(start_color, end_color, num_colors):
@@ -142,6 +144,66 @@ fig_education_level = px.bar(
     color_discrete_sequence=gradient_colors,
 )
 fig_education_level.show()
+
+# Weather conditions
+weather_counts = (
+    df.groupBy("Weather_conditions")
+    .agg(count("*").alias("count"))
+    .orderBy(col("count").desc())
+)
+
+weather_counts_pandas = weather_counts.toPandas()  # To visualize the data
+num_levels = weather_counts_pandas.shape[0]
+gradient_colors = generate_gradient("#FF0000", "#FFFF00", num_levels)
+fig_weather_conditions = px.bar(
+    weather_counts_pandas,
+    x="Weather_conditions",
+    y="count",
+    title="Conditions météorologiques lors des accidents",
+    color="Weather_conditions",
+    color_discrete_sequence=gradient_colors,
+)
+fig_weather_conditions.show()
+
+# Road surface type
+road_surface_counts = (
+    df.groupBy("Road_surface_type")
+    .agg(count("*").alias("count"))
+    .orderBy(col("count").desc())
+)
+
+road_surface_counts_pandas = road_surface_counts.toPandas()  # To visualize the data
+num_levels = road_surface_counts_pandas.shape[0]
+gradient_colors = generate_gradient("#FF0000", "#FFFF00", num_levels)
+fig_road_surface = px.bar(
+    road_surface_counts_pandas,
+    x="Road_surface_type",
+    y="count",
+    title="Types de surface de route lors des accidents",
+    color="Road_surface_type",
+    color_discrete_sequence=gradient_colors,
+)
+fig_road_surface.show()
+
+# Accident severity
+severity_counts = (
+    df.groupBy("Accident_severity")
+    .agg(count("*").alias("count"))
+    .orderBy(col("count").desc())
+)
+
+severity_counts_pandas = severity_counts.toPandas()  # To visualize the data
+num_levels = severity_counts_pandas.shape[0]
+gradient_colors = generate_gradient("#FF0000", "#FFFF00", num_levels)
+fig_accident_severity = px.pie(
+    severity_counts_pandas,
+    names="Accident_severity",
+    values="count",
+    title="Sévérité des accidents",
+    color_discrete_sequence=gradient_colors,
+)
+fig_accident_severity.show()
+
 
 # Stop SparkSession
 spark.stop()
