@@ -7,36 +7,26 @@ This project aims to analyze car accident data to extract useful statistics. The
 Before starting, ensure you have the following installed:
 - Hadoop
 - Java
-- Gradle (for dependency management)
+- Python
 
 ## Installation
-1. Clone this repository:
+1. Clone this repository (or fork):
    ```bash
-   git clone https://github.com/your-username/your-repo.git
+   https://github.com/Invorom/accidents-analysis.git
    ```
 2. Navigate to the project directory:
    ```bash
    cd your-repo
    ```
-3. Run the initialization script to set up the environment and download sample data:
-   ```bash
-   ./init.sh
-   ```
-4. Build the project and fetch dependencies:
-   ```bash
-   gradle build
-   ```
-
-## Execution
-### Automatic Method
-To run all queries, use the following command:
+3. Setup hdfs
 ```bash
-./run.sh runAll
+start-dfs.sh
+start-yarn.sh
 ```
-You can also run specific queries by passing them as arguments:
-```bash
-./run.sh ContributingFactors LethalPerWeek WeekBorough
-```
+4. Run the python file
+   ```bash
+   python3 main.py
+   ```
 
 ## Project Structure
 - `src/main/java`: Contains Java source files for MapReduce tasks.
