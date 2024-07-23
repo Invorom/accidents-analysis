@@ -1,7 +1,8 @@
-from pyspark.sql import SparkSession, col, count
+from pyspark.sql import SparkSession
 import plotly.express as px
 import matplotlib.colors as mcolors
 import numpy as np
+from pyspark.sql.functions import col, count
 
 # Initialize SparkSession
 spark = SparkSession.builder.appName("SparkApp").getOrCreate()
