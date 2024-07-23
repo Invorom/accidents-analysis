@@ -2,7 +2,7 @@ from pyspark.sql import SparkSession
 import plotly.express as px
 import matplotlib.colors as mcolors
 import numpy as np
-from pyspark.sql.functions import col, count
+from pyspark.sql.functions import col, count, round, mean
 
 # Initialize SparkSession
 spark = SparkSession.builder.appName("SparkApp").getOrCreate()
@@ -200,10 +200,78 @@ fig_accident_severity = px.pie(
     names="Accident_severity",
     values="count",
     title="Sévérité des accidents",
+    color="Accident_severity",
     color_discrete_sequence=gradient_colors,
 )
 fig_accident_severity.show()
 
+# Accidents causes by sex
+total_cases_by_sex = df.groupBy("Sex_of_driver").agg(count("*").alias("Total_Count"))
+
+cases_by_sex_cause = (
+    df.groupBy("Sex_of_driver", "Cause_of_accident")
+    .agg(count("*").alias("Count"))
+    .join(total_cases_by_sex, "Sex_of_driver")
+    .withColumn("Percentage", round((col("Count") / col("Total_Count")) * 100, 2))
+    .orderBy("Cause_of_accident", "Sex_of_driver")
+)
+
+cases_by_sex_cause_pandas = cases_by_sex_cause.select(
+    "Sex_of_driver", "Cause_of_accident", "Percentage"
+).toPandas()  # To visualize the data
+
+color_map = {"Male": "#0080FF", "Female": "#FD6C9E", "Unknown": "#B0B0B0"}
+
+fig_cases_by_sex_cause = px.bar(
+    cases_by_sex_cause_pandas,
+    x="Cause_of_accident",
+    y="Percentage",
+    color="Sex_of_driver",
+    barmode="group",
+    title="Percentage of Accident Types by Gender",
+    labels={"Cause_of_accident": "Causes", "Percentage": "Percentage of Cases"},
+    color_discrete_map=color_map,
+)
+fig_cases_by_sex_cause.show()
+
+
+# Accidents causes by educational level
+total_cases_by_education = df.groupBy("Educational_level").agg(
+    count("*").alias("Total_Count")
+)
+
+cases_by_education_cause = (
+    df.groupBy("Educational_level", "Cause_of_accident")
+    .agg(count("*").alias("Count"))
+    .join(total_cases_by_education, "Educational_level")
+    .withColumn("Percentage", round((col("Count") / col("Total_Count")) * 100, 2))
+)
+
+cases_by_education_cause_pandas = cases_by_education_cause.select(
+    "Educational_level", "Cause_of_accident", "Percentage"
+).toPandas()  # To visualize the data
+
+color_map = {
+    "High school": "#FD6C9E",
+    "Junior high school": "#FF8000",
+    "Elementary school": "#0080FF",
+    "Above high school": "#643B9F",
+    "Illiterate": "#FFD700",
+    "Writing and reading": "#FF0000",
+    "Unknown": "#B0B0B0",
+}
+
+fig_cases_by_education_cause = px.bar(
+    cases_by_education_cause_pandas,
+    x="Cause_of_accident",
+    y="Percentage",
+    color="Educational_level",
+    barmode="group",
+    title="Percentage of Accident Types by Educational Level",
+    labels={"Cause_of_accident": "Causes", "Percentage": "Percentage of Cases"},
+    color_discrete_map=color_map,
+)
+fig_cases_by_education_cause.show()
 
 # Stop SparkSession
 spark.stop()
