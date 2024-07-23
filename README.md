@@ -18,13 +18,11 @@ Before starting, ensure you have the following installed:
    ```bash
    cd your-repo
    ```
-
 3. Setup hdfs
-```bash
-start-dfs.sh
-start-yarn.sh
-```
-
+   ```bash
+   start-dfs.sh
+   start-yarn.sh
+   ```
 4. Run the python file
    ```bash
    python3 main.py
