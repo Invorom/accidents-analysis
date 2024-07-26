@@ -228,7 +228,7 @@ fig_cases_by_sex_cause = px.bar(
     y="Percentage",
     color="Sex_of_driver",
     barmode="group",
-    title="Percentage of Accident Types by Gender",
+    title="Pourcentage des types d'accidents par sexe",
     labels={"Cause_of_accident": "Causes", "Percentage": "Percentage of Cases"},
     color_discrete_map=color_map,
 )
@@ -267,7 +267,7 @@ fig_cases_by_education_cause = px.bar(
     y="Percentage",
     color="Educational_level",
     barmode="group",
-    title="Percentage of Accident Types by Educational Level",
+    title="Pourcentage des types d'accidents par niveau d'éducation",
     labels={"Cause_of_accident": "Causes", "Percentage": "Percentage of Cases"},
     color_discrete_map=color_map,
 )
@@ -299,6 +299,45 @@ fig_experience_distribution = px.bar(
     color_discrete_sequence=gradient_colors,
 )
 fig_experience_distribution.show()
+
+# Accidents causes by driving experience
+df_standardized = df.withColumn(
+    "Driving_experience",
+    when(col("Driving_experience").isin("unknown", "Unknown"), "Unknown").otherwise(
+        col("Driving_experience")
+    ),
+)
+
+total_cases_by_experience = df_standardized.groupBy("Driving_experience").agg(
+    count("*").alias("Total_Count")
+)
+
+cases_by_experience_cause = (
+    df.groupBy("Driving_experience", "Cause_of_accident")
+    .agg(count("*").alias("Count"))
+    .join(total_cases_by_experience, "Driving_experience")
+    .withColumn("Percentage", round((col("Count") / col("Total_Count")) * 100, 2))
+    .orderBy("Cause_of_accident", "Driving_experience")
+)
+
+cases_by_experience_cause_pandas = cases_by_experience_cause.select(
+    "Driving_experience", "Cause_of_accident", "Percentage"
+).toPandas()  # To visualize the data
+
+color_map = {"Male": "#0080FF", "Female": "#FD6C9E", "Unknown": "#B0B0B0"}
+
+fig_cases_by_experience_cause = px.bar(
+    cases_by_experience_cause_pandas,
+    x="Cause_of_accident",
+    y="Percentage",
+    color="Driving_experience",
+    barmode="group",
+    title="Pourcentage des types d'accidents par expérience de conduite",
+    labels={"Cause_of_accident": "Causes", "Percentage": "Percentage of Cases"},
+    color_discrete_map=color_map,
+)
+fig_cases_by_experience_cause.show()
+
 
 # Stop SparkSession
 spark.stop()
