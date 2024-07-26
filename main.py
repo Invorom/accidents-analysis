@@ -2,7 +2,7 @@ from pyspark.sql import SparkSession
 import plotly.express as px
 import matplotlib.colors as mcolors
 import numpy as np
-from pyspark.sql.functions import col, count, round, mean
+from pyspark.sql.functions import col, count, round, when
 
 # Initialize SparkSession
 spark = SparkSession.builder.appName("SparkApp").getOrCreate()
@@ -272,6 +272,33 @@ fig_cases_by_education_cause = px.bar(
     color_discrete_map=color_map,
 )
 fig_cases_by_education_cause.show()
+
+# Driving experience
+df_standardized = df.withColumn(
+    "Driving_experience",
+    when(col("Driving_experience").isin("unknown", "Unknown"), "Unknown").otherwise(
+        col("Driving_experience")
+    ),
+)
+
+experience_counts = (
+    df_standardized.groupBy("Driving_experience")
+    .agg(count("*").alias("count"))
+    .orderBy(col("count").desc())
+)
+
+experience_counts_pandas = experience_counts.toPandas()  # To visualize the data
+num_levels = experience_counts_pandas.shape[0]
+gradient_colors = generate_gradient("#FF0000", "#FFFF00", num_levels)
+fig_experience_distribution = px.bar(
+    experience_counts_pandas,
+    x="Driving_experience",
+    y="count",
+    title="Répartition des accidents selon l'expérience de conduite",
+    color="Driving_experience",
+    color_discrete_sequence=gradient_colors,
+)
+fig_experience_distribution.show()
 
 # Stop SparkSession
 spark.stop()
