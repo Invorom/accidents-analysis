@@ -18,7 +18,7 @@ df = df.drop_duplicates()
 df = df.dropna()
 
 # Nettoyage des noms de colonnes (suppression des espaces superflus et mise en minuscule)
-df.columns = df.columns.str.strip().str.lower()
+df.columns = df.columns.str.strip()
 
 # Nettoyage des espaces superflus dans les colonnes de type texte
 for col in df.select_dtypes(include=['object']).columns:
