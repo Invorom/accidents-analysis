@@ -1,12 +1,9 @@
 # Car Accidents Analysis with Hadoop
 
 ## Project Description
-This project aims to analyze car accident data to extract useful statistics. The main goal is to identify trends and patterns in accident data to propose improved safety measures. This project utilizes Hadoop for processing large-scale data.
-
+This project aims to analyze car accident data to extract useful statistics. The main goal is to identify trends and patterns in accident data to propose improved safety measures.
 ## Prerequisites
 Before starting, ensure you have the following installed:
-- Hadoop
-- Java
 - Python
 
 ## Installation
@@ -18,12 +15,8 @@ Before starting, ensure you have the following installed:
    ```bash
    cd your-repo
    ```
-3. Setup hdfs
+4. Run the python files
    ```bash
-   start-dfs.sh
-   start-yarn.sh
-   ```
-4. Run the python file
-   ```bash
+   python3 clean.py
    python3 main.py
    ```
