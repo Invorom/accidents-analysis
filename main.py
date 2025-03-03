@@ -1,41 +1,31 @@
-from pyspark.sql import SparkSession
+import pandas as pd
 import plotly.express as px
 import matplotlib.colors as mcolors
 import numpy as np
-from pyspark.sql.functions import col, count, round, when
 
-# Initialize SparkSession
-spark = SparkSession.builder.appName("SparkApp").getOrCreate()
+import plotly.io as pio
 
-# Read data from CSV file
-df = spark.read.csv("hdfs://localhost:9000/cleaned.csv", header=True)
+pio.renderers.default = "browser"
 
-df.printSchema()
+# Lecture du fichier CSV avec Pandas
+df = pd.read_csv("cleaned.csv")  # Assurez-vous que le chemin du fichier est correct
 
-
-# Function to generate gradient colors
+# Fonction pour générer une palette de couleurs en dégradé
 def generate_gradient(start_color, end_color, num_colors):
     colors = [
         mcolors.rgb2hex(c)
-        for c in mcolors.LinearSegmentedColormap.from_list(
-            "", [start_color, end_color]
-        )(np.linspace(0, 1, num_colors))
+        for c in mcolors.LinearSegmentedColormap.from_list("", [start_color, end_color])(np.linspace(0, 1, num_colors))
     ]
     return colors
 
-
-# Age distribution
-age_counts = (
-    df.groupBy("Age_band_of_driver")
-    .agg(count("*").alias("count"))
-    .orderBy(col("count").desc())
-)
-
-age_counts_pandas = age_counts.toPandas()  # To visualize the data
-num_levels = age_counts_pandas.shape[0]
+# -------------------------------------------------------------------
+# Répartition par tranche d'âge
+age_counts = df.groupby("Age_band_of_driver").size().reset_index(name="count")
+age_counts = age_counts.sort_values("count", ascending=False)
+num_levels = age_counts.shape[0]
 gradient_colors = generate_gradient("#FF0000", "#FFFF00", num_levels)
 fig_age_distribution = px.bar(
-    age_counts_pandas,
+    age_counts,
     x="Age_band_of_driver",
     y="count",
     title="Répartition des accidents selon l'âge des conducteurs",
@@ -44,18 +34,14 @@ fig_age_distribution = px.bar(
 )
 fig_age_distribution.show()
 
-# Sex distribution
-sex_counts = (
-    df.groupBy("Sex_of_driver")
-    .agg(count("*").alias("count"))
-    .orderBy(col("count").desc())
-)
-
-sex_counts_pandas = sex_counts.toPandas()  # To visualize the data
-num_sexes = sex_counts_pandas.shape[0]
+# -------------------------------------------------------------------
+# Répartition par sexe
+sex_counts = df.groupby("Sex_of_driver").size().reset_index(name="count")
+sex_counts = sex_counts.sort_values("count", ascending=False)
+num_sexes = sex_counts.shape[0]
 gradient_colors = generate_gradient("#FF0000", "#FFFF00", num_sexes)
 fig_sex_distribution = px.pie(
-    sex_counts_pandas,
+    sex_counts,
     names="Sex_of_driver",
     values="count",
     title="Répartition des accidents selon le sexe des conducteurs",
@@ -63,18 +49,14 @@ fig_sex_distribution = px.pie(
 )
 fig_sex_distribution.show()
 
-# Causes of accident
-causes_counts = (
-    df.groupBy("Cause_of_accident")
-    .agg(count("*").alias("count"))
-    .orderBy(col("count").desc())
-)
-
-causes_counts_pandas = causes_counts.toPandas()  # To visualize the data
-num_levels = causes_counts_pandas.shape[0]
+# -------------------------------------------------------------------
+# Causes d'accident
+causes_counts = df.groupby("Cause_of_accident").size().reset_index(name="count")
+causes_counts = causes_counts.sort_values("count", ascending=False)
+num_levels = causes_counts.shape[0]
 gradient_colors = generate_gradient("#FF0000", "#FFFF00", num_levels)
 fig_accident_causes = px.bar(
-    causes_counts_pandas,
+    causes_counts,
     x="Cause_of_accident",
     y="count",
     title="Causes d'accidents les plus courantes",
@@ -83,18 +65,14 @@ fig_accident_causes = px.bar(
 )
 fig_accident_causes.show()
 
-# Types of collision
-collision_counts = (
-    df.groupBy("Type_of_collision")
-    .agg(count("*").alias("count"))
-    .orderBy(col("count").desc())
-)
-
-collision_counts_pandas = collision_counts.toPandas()  # To visualize the data
-num_levels = collision_counts_pandas.shape[0]
+# -------------------------------------------------------------------
+# Types de collision
+collision_counts = df.groupby("Type_of_collision").size().reset_index(name="count")
+collision_counts = collision_counts.sort_values("count", ascending=False)
+num_levels = collision_counts.shape[0]
 gradient_colors = generate_gradient("#FF0000", "#FFFF00", num_levels)
 fig_collision_type = px.bar(
-    collision_counts_pandas,
+    collision_counts,
     x="Type_of_collision",
     y="count",
     title="Types de collisions les plus fréquents",
@@ -103,20 +81,14 @@ fig_collision_type = px.bar(
 )
 fig_collision_type.show()
 
-# Light conditions
-light_conditions_counts = (
-    df.groupBy("Light_conditions")
-    .agg(count("*").alias("count"))
-    .orderBy(col("count").desc())
-)
-
-light_conditions_counts_pandas = (
-    light_conditions_counts.toPandas()
-)  # To visualize the data
-num_levels = light_conditions_counts_pandas.shape[0]
+# -------------------------------------------------------------------
+# Conditions de lumière
+light_conditions_counts = df.groupby("Light_conditions").size().reset_index(name="count")
+light_conditions_counts = light_conditions_counts.sort_values("count", ascending=False)
+num_levels = light_conditions_counts.shape[0]
 gradient_colors = generate_gradient("#FF0000", "#FFFF00", num_levels)
 fig_light_conditions = px.bar(
-    light_conditions_counts_pandas,
+    light_conditions_counts,
     x="Light_conditions",
     y="count",
     title="Conditions de lumière lors des accidents",
@@ -125,18 +97,14 @@ fig_light_conditions = px.bar(
 )
 fig_light_conditions.show()
 
-# Educational level
-education_counts = (
-    df.groupBy("Educational_level")
-    .agg(count("*").alias("count"))
-    .orderBy(col("count").desc())
-)
-
-education_counts_pandas = education_counts.toPandas()  # To visualize the data
-num_levels = education_counts_pandas.shape[0]
+# -------------------------------------------------------------------
+# Niveau d'éducation
+education_counts = df.groupby("Educational_level").size().reset_index(name="count")
+education_counts = education_counts.sort_values("count", ascending=False)
+num_levels = education_counts.shape[0]
 gradient_colors = generate_gradient("#FF0000", "#FFFF00", num_levels)
 fig_education_level = px.bar(
-    education_counts_pandas,
+    education_counts,
     x="Educational_level",
     y="count",
     title="Répartition des accidents selon le niveau d'éducation des conducteurs",
@@ -145,18 +113,14 @@ fig_education_level = px.bar(
 )
 fig_education_level.show()
 
-# Weather conditions
-weather_counts = (
-    df.groupBy("Weather_conditions")
-    .agg(count("*").alias("count"))
-    .orderBy(col("count").desc())
-)
-
-weather_counts_pandas = weather_counts.toPandas()  # To visualize the data
-num_levels = weather_counts_pandas.shape[0]
+# -------------------------------------------------------------------
+# Conditions météorologiques
+weather_counts = df.groupby("Weather_conditions").size().reset_index(name="count")
+weather_counts = weather_counts.sort_values("count", ascending=False)
+num_levels = weather_counts.shape[0]
 gradient_colors = generate_gradient("#FF0000", "#FFFF00", num_levels)
 fig_weather_conditions = px.bar(
-    weather_counts_pandas,
+    weather_counts,
     x="Weather_conditions",
     y="count",
     title="Conditions météorologiques lors des accidents",
@@ -165,18 +129,14 @@ fig_weather_conditions = px.bar(
 )
 fig_weather_conditions.show()
 
-# Road surface type
-road_surface_counts = (
-    df.groupBy("Road_surface_type")
-    .agg(count("*").alias("count"))
-    .orderBy(col("count").desc())
-)
-
-road_surface_counts_pandas = road_surface_counts.toPandas()  # To visualize the data
-num_levels = road_surface_counts_pandas.shape[0]
+# -------------------------------------------------------------------
+# Type de surface de route
+road_surface_counts = df.groupby("Road_surface_type").size().reset_index(name="count")
+road_surface_counts = road_surface_counts.sort_values("count", ascending=False)
+num_levels = road_surface_counts.shape[0]
 gradient_colors = generate_gradient("#FF0000", "#FFFF00", num_levels)
 fig_road_surface = px.bar(
-    road_surface_counts_pandas,
+    road_surface_counts,
     x="Road_surface_type",
     y="count",
     title="Types de surface de route lors des accidents",
@@ -185,18 +145,14 @@ fig_road_surface = px.bar(
 )
 fig_road_surface.show()
 
-# Accident severity
-severity_counts = (
-    df.groupBy("Accident_severity")
-    .agg(count("*").alias("count"))
-    .orderBy(col("count").desc())
-)
-
-severity_counts_pandas = severity_counts.toPandas()  # To visualize the data
-num_levels = severity_counts_pandas.shape[0]
+# -------------------------------------------------------------------
+# Sévérité des accidents
+severity_counts = df.groupby("Accident_severity").size().reset_index(name="count")
+severity_counts = severity_counts.sort_values("count", ascending=False)
+num_levels = severity_counts.shape[0]
 gradient_colors = generate_gradient("#FF0000", "#FFFF00", num_levels)
 fig_accident_severity = px.pie(
-    severity_counts_pandas,
+    severity_counts,
     names="Accident_severity",
     values="count",
     title="Sévérité des accidents",
@@ -205,53 +161,35 @@ fig_accident_severity = px.pie(
 )
 fig_accident_severity.show()
 
-# Accidents causes by sex
-total_cases_by_sex = df.groupBy("Sex_of_driver").agg(count("*").alias("Total_Count"))
+# -------------------------------------------------------------------
+# Pourcentage des types d'accidents par sexe
+total_cases_by_sex = df.groupby("Sex_of_driver").size().reset_index(name="Total_Count")
+cases_by_sex_cause = df.groupby(["Sex_of_driver", "Cause_of_accident"]).size().reset_index(name="Count")
+cases_by_sex_cause = cases_by_sex_cause.merge(total_cases_by_sex, on="Sex_of_driver")
+cases_by_sex_cause["Percentage"] = round((cases_by_sex_cause["Count"] / cases_by_sex_cause["Total_Count"]) * 100, 2)
+cases_by_sex_cause = cases_by_sex_cause.sort_values(["Cause_of_accident", "Sex_of_driver"])
 
-cases_by_sex_cause = (
-    df.groupBy("Sex_of_driver", "Cause_of_accident")
-    .agg(count("*").alias("Count"))
-    .join(total_cases_by_sex, "Sex_of_driver")
-    .withColumn("Percentage", round((col("Count") / col("Total_Count")) * 100, 2))
-    .orderBy("Cause_of_accident", "Sex_of_driver")
-)
-
-cases_by_sex_cause_pandas = cases_by_sex_cause.select(
-    "Sex_of_driver", "Cause_of_accident", "Percentage"
-).toPandas()  # To visualize the data
-
-color_map = {"Male": "#0080FF", "Female": "#FD6C9E", "Unknown": "#B0B0B0"}
-
+color_map_sex = {"Male": "#0080FF", "Female": "#FD6C9E", "Unknown": "#B0B0B0"}
 fig_cases_by_sex_cause = px.bar(
-    cases_by_sex_cause_pandas,
+    cases_by_sex_cause,
     x="Cause_of_accident",
     y="Percentage",
     color="Sex_of_driver",
     barmode="group",
     title="Pourcentage des types d'accidents par sexe",
     labels={"Cause_of_accident": "Causes", "Percentage": "Percentage of Cases"},
-    color_discrete_map=color_map,
+    color_discrete_map=color_map_sex,
 )
 fig_cases_by_sex_cause.show()
 
+# -------------------------------------------------------------------
+# Pourcentage des types d'accidents par niveau d'éducation
+total_cases_by_education = df.groupby("Educational_level").size().reset_index(name="Total_Count")
+cases_by_education_cause = df.groupby(["Educational_level", "Cause_of_accident"]).size().reset_index(name="Count")
+cases_by_education_cause = cases_by_education_cause.merge(total_cases_by_education, on="Educational_level")
+cases_by_education_cause["Percentage"] = round((cases_by_education_cause["Count"] / cases_by_education_cause["Total_Count"]) * 100, 2)
 
-# Accidents causes by educational level
-total_cases_by_education = df.groupBy("Educational_level").agg(
-    count("*").alias("Total_Count")
-)
-
-cases_by_education_cause = (
-    df.groupBy("Educational_level", "Cause_of_accident")
-    .agg(count("*").alias("Count"))
-    .join(total_cases_by_education, "Educational_level")
-    .withColumn("Percentage", round((col("Count") / col("Total_Count")) * 100, 2))
-)
-
-cases_by_education_cause_pandas = cases_by_education_cause.select(
-    "Educational_level", "Cause_of_accident", "Percentage"
-).toPandas()  # To visualize the data
-
-color_map = {
+color_map_education = {
     "High school": "#FD6C9E",
     "Junior high school": "#FF8000",
     "Elementary school": "#0080FF",
@@ -262,36 +200,27 @@ color_map = {
 }
 
 fig_cases_by_education_cause = px.bar(
-    cases_by_education_cause_pandas,
+    cases_by_education_cause,
     x="Cause_of_accident",
     y="Percentage",
     color="Educational_level",
     barmode="group",
     title="Pourcentage des types d'accidents par niveau d'éducation",
     labels={"Cause_of_accident": "Causes", "Percentage": "Percentage of Cases"},
-    color_discrete_map=color_map,
+    color_discrete_map=color_map_education,
 )
 fig_cases_by_education_cause.show()
 
-# Driving experience
-df_standardized = df.withColumn(
-    "Driving_experience",
-    when(col("Driving_experience").isin("unknown", "Unknown"), "Unknown").otherwise(
-        col("Driving_experience")
-    ),
-)
-
-experience_counts = (
-    df_standardized.groupBy("Driving_experience")
-    .agg(count("*").alias("count"))
-    .orderBy(col("count").desc())
-)
-
-experience_counts_pandas = experience_counts.toPandas()  # To visualize the data
-num_levels = experience_counts_pandas.shape[0]
+# -------------------------------------------------------------------
+# Répartition selon l'expérience de conduite
+# Normalisation de la colonne "Driving_experience" pour traiter les valeurs "unknown" ou "Unknown"
+df["Driving_experience"] = df["Driving_experience"].apply(lambda x: "Unknown" if str(x).lower() == "unknown" else x)
+experience_counts = df.groupby("Driving_experience").size().reset_index(name="count")
+experience_counts = experience_counts.sort_values("count", ascending=False)
+num_levels = experience_counts.shape[0]
 gradient_colors = generate_gradient("#FF0000", "#FFFF00", num_levels)
 fig_experience_distribution = px.bar(
-    experience_counts_pandas,
+    experience_counts,
     x="Driving_experience",
     y="count",
     title="Répartition des accidents selon l'expérience de conduite",
@@ -300,44 +229,24 @@ fig_experience_distribution = px.bar(
 )
 fig_experience_distribution.show()
 
-# Accidents causes by driving experience
-df_standardized = df.withColumn(
-    "Driving_experience",
-    when(col("Driving_experience").isin("unknown", "Unknown"), "Unknown").otherwise(
-        col("Driving_experience")
-    ),
-)
+# -------------------------------------------------------------------
+# Pourcentage des types d'accidents par expérience de conduite
+total_cases_by_experience = df.groupby("Driving_experience").size().reset_index(name="Total_Count")
+cases_by_experience_cause = df.groupby(["Driving_experience", "Cause_of_accident"]).size().reset_index(name="Count")
+cases_by_experience_cause = cases_by_experience_cause.merge(total_cases_by_experience, on="Driving_experience")
+cases_by_experience_cause["Percentage"] = round((cases_by_experience_cause["Count"] / cases_by_experience_cause["Total_Count"]) * 100, 2)
+cases_by_experience_cause = cases_by_experience_cause.sort_values(["Cause_of_accident", "Driving_experience"])
 
-total_cases_by_experience = df_standardized.groupBy("Driving_experience").agg(
-    count("*").alias("Total_Count")
-)
-
-cases_by_experience_cause = (
-    df.groupBy("Driving_experience", "Cause_of_accident")
-    .agg(count("*").alias("Count"))
-    .join(total_cases_by_experience, "Driving_experience")
-    .withColumn("Percentage", round((col("Count") / col("Total_Count")) * 100, 2))
-    .orderBy("Cause_of_accident", "Driving_experience")
-)
-
-cases_by_experience_cause_pandas = cases_by_experience_cause.select(
-    "Driving_experience", "Cause_of_accident", "Percentage"
-).toPandas()  # To visualize the data
-
-color_map = {"Male": "#0080FF", "Female": "#FD6C9E", "Unknown": "#B0B0B0"}
-
+# Remarque : La carte de couleur ci-dessous est issue de l'exemple Spark, à ajuster selon les valeurs réelles de Driving_experience
+color_map_experience = {"Male": "#0080FF", "Female": "#FD6C9E", "Unknown": "#B0B0B0"}
 fig_cases_by_experience_cause = px.bar(
-    cases_by_experience_cause_pandas,
+    cases_by_experience_cause,
     x="Cause_of_accident",
     y="Percentage",
     color="Driving_experience",
     barmode="group",
     title="Pourcentage des types d'accidents par expérience de conduite",
     labels={"Cause_of_accident": "Causes", "Percentage": "Percentage of Cases"},
-    color_discrete_map=color_map,
+    color_discrete_map=color_map_experience,
 )
 fig_cases_by_experience_cause.show()
-
-
-# Stop SparkSession
-spark.stop()
